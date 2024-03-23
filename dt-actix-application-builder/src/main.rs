@@ -46,31 +46,56 @@
 // }
 
 // End of web::Data
-use actix_web::{web, App, HttpServer};
-use std::sync::{Mutex, MutexGuard};
 
 // Start of AppStateWithCounter
-struct AppStateWithCounter {
-    counter: Mutex<i32>,
-}
+// use actix_web::{web, get, App, HttpServer};
+// use std::sync::{Mutex, MutexGuard};
 
-async fn index(data: web::Data<AppStateWithCounter>) -> String {
-    let mut counter: MutexGuard<i32> = data.counter.lock().unwrap();
-    *counter += 1;
-    format!("Request Number is {counter}!")
-}
+// struct AppStateWithCounter {
+//     counter: Mutex<i32>,
+// }
 
+// async fn index(data: web::Data<AppStateWithCounter>) -> String {
+//     let mut counter: MutexGuard<i32> = data.counter.lock().unwrap();
+//     *counter += 1;
+//     format!("Request Number is {counter}!")
+// }
+
+// #[actix_web::main]
+// async fn main() -> std::io::Result<()> {
+//     let counter = web::Data::new(AppStateWithCounter {
+//         counter: Mutex::new(0),
+//     });
+//     HttpServer::new(move || {
+//         App::new()
+//             .app_data(counter.clone())
+//             .route("/", web::get().to(index))
+//     })
+//     .bind(("127.0.0.1", 8099))?
+//     .run()
+//     .await
+// }
+// End of AppStateWithCounter
+
+// Start of AppStateWithCounter
+use actix_web::{get, web, App, HttpServer, Responder};
+
+#[get("/login")]
+async fn login() -> impl Responder {
+    "login"
+}
+#[get("/logout")]
+async fn logout() -> impl Responder {
+    "logout"
+}
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let counter = web::Data::new(AppStateWithCounter {
-        counter: Mutex::new(0),
-    });
-    HttpServer::new(move || {
-        App::new()
-            .app_data(counter.clone())
-            .route("/", web::get().to(index))
+    HttpServer::new(|| {
+        let scope_users = web::scope("/users").service(login).service(logout);
+        App::new().service(scope_users)
     })
     .bind(("127.0.0.1", 8099))?
     .run()
     .await
 }
+// End of AppStateWithCounter
