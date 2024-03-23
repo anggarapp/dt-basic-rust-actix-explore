@@ -1,12 +1,26 @@
-use actix_web::{web, App, HttpServer};
-use std::sync::{Mutex, MutexGuard};
-
 // Start of web::scope
+
+// use actix_web::{web, App, HttpServer, Responder};
+
 // async fn index() -> impl Responder {
 //     "Hello From index.html"
 // }
+
+// #[actix_web::main]
+// async fn main() -> std::io::Result<()> {
+//     HttpServer::new(|| {
+//         App::new().service(web::scope("/app").route("/index.html", web::get().to(index)))
+//     })
+//     .bind(("127.0.0.1", 8989))?
+//     .run()
+//     .await
+// }
+
 // End of web::scope
+
 // Start of web::Data
+
+// use actix_web::{get, web, App, HttpServer};
 // struct AppState {
 //     app_name: String,
 // }
@@ -16,8 +30,26 @@ use std::sync::{Mutex, MutexGuard};
 //     let app_name: &String = &data.app_name;
 //     format!("Hello {app_name}!")
 // }
+
+// #[actix_web::main]
+// async fn main() -> std::io::Result<()> {
+//     HttpServer::new(|| {
+//         App::new()
+//             .app_data(web::Data::new(AppState {
+//                 app_name: String::from("Ashborn"),
+//             }))
+//             .service(index)
+//     })
+//     .bind(("127.0.0.1", 8099))?
+//     .run()
+//     .await
+// }
+
 // End of web::Data
-// Start of web::Data
+use actix_web::{web, App, HttpServer};
+use std::sync::{Mutex, MutexGuard};
+
+// Start of AppStateWithCounter
 struct AppStateWithCounter {
     counter: Mutex<i32>,
 }
@@ -27,32 +59,9 @@ async fn index(data: web::Data<AppStateWithCounter>) -> String {
     *counter += 1;
     format!("Request Number is {counter}!")
 }
-// End of web::Data
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    // Start of web::scope
-    // HttpServer::new(|| {
-    //     App::new().service(web::scope("/app").route("/index.html", web::get().to(index)))
-    // })
-    // .bind(("127.0.0.1", 8989))?
-    // .run()
-    // .await
-    // End of web::scope
-
-    // Start of web::Data
-    // HttpServer::new(|| {
-    //     App::new()
-    //         .app_data(web::Data::new(AppState {
-    //             app_name: String::from("Ashborn"),
-    //         }))
-    //         .service(index)
-    // })
-    // .bind(("127.0.0.1", 8099))?
-    // .run()
-    // .await
-    // End of web::Data
-    // Start of web::Data
     let counter = web::Data::new(AppStateWithCounter {
         counter: Mutex::new(0),
     });
@@ -64,5 +73,4 @@ async fn main() -> std::io::Result<()> {
     .bind(("127.0.0.1", 8099))?
     .run()
     .await
-    // End of web::Data
 }
