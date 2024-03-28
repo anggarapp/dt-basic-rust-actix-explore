@@ -28,6 +28,16 @@ async fn index_three(req: HttpRequest) -> Result<String> {
     Ok(format!("Elcome {}, user_id {}", username, user_id))
 }
 
+#[derive(Deserialize)]
+struct InfoQuery {
+    username: String,
+}
+
+#[get("/query")]
+async fn index_query(query: web::Query<InfoQuery>) -> Result<String> {
+    Ok(format!("Elcome {}", query.username))
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
@@ -35,6 +45,7 @@ async fn main() -> std::io::Result<()> {
             .service(index_one)
             .service(index_two)
             .service(index_three)
+            .service(index_query)
     })
     .bind(("127.0.0.1", 8099))?
     .run()
