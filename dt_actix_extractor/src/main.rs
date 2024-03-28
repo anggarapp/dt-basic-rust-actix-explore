@@ -1,5 +1,6 @@
 use actix_web::{error, get, post, web, App, HttpRequest, HttpResponse, HttpServer, Result};
 use serde::Deserialize;
+use std::sync::{Arc, Mutex};
 
 #[derive(Deserialize)]
 struct Info {
@@ -55,14 +56,28 @@ async fn index_form(form: web::Form<FormData>) -> Result<String> {
     Ok(format!("Elcome {}", form.username))
 }
 
+struct AppState {
+    counter: Arc<Mutex<i32>>,
+}
+
+async fn mutable_app_state(state: web::Data<AppState>) -> HttpResponse {
+    let mut counter = state.counter.lock().unwrap();
+    *counter += 1;
+    HttpResponse::Ok().body(format!("{}", *counter))
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| {
+    let app_state = web::Data::new(AppState {
+        counter: Arc::new(Mutex::new(0)),
+    });
+    HttpServer::new(move || {
         let json_config = web::JsonConfig::default()
             .limit(1024)
             .error_handler(|err, _res| {
                 error::InternalError::from_response(err, HttpResponse::Conflict().finish()).into()
             });
+
         App::new()
             .service(index_one)
             .service(index_two)
@@ -74,6 +89,8 @@ async fn main() -> std::io::Result<()> {
                     .app_data(json_config)
                     .route(web::post().to(index_json)),
             )
+            .app_data(app_state.clone())
+            .route("mut", web::get().to(mutable_app_state))
     })
     .bind(("127.0.0.1", 8099))?
     .run()
