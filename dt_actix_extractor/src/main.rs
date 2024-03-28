@@ -1,4 +1,4 @@
-use actix_web::{get, post, web, App, HttpRequest, HttpServer, Result};
+use actix_web::{error, get, web, App, HttpRequest, HttpResponse, HttpServer, Result};
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -42,7 +42,7 @@ struct InfoJson {
     username: String,
 }
 
-#[post("/json")]
+// #[post("/json")]
 async fn index_json(json: web::Json<InfoJson>) -> Result<String> {
     Ok(format!("Elcome {}", json.username))
 }
@@ -50,12 +50,21 @@ async fn index_json(json: web::Json<InfoJson>) -> Result<String> {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
+        let json_config = web::JsonConfig::default()
+            .limit(1024)
+            .error_handler(|err, _res| {
+                error::InternalError::from_response(err, HttpResponse::Conflict().finish()).into()
+            });
         App::new()
             .service(index_one)
             .service(index_two)
             .service(index_three)
             .service(index_query)
-            .service(index_json)
+            .service(
+                web::resource("/submit")
+                    .app_data(json_config)
+                    .route(web::post().to(index_json)),
+            )
     })
     .bind(("127.0.0.1", 8099))?
     .run()
