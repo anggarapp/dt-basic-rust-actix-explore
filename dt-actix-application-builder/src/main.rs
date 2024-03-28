@@ -78,24 +78,64 @@
 // End of AppStateWithCounter
 
 // Start of AppStateWithCounter
-use actix_web::{get, web, App, HttpServer, Responder};
+// use actix_web::{get, web, App, HttpServer, Responder};
 
-#[get("/login")]
-async fn login() -> impl Responder {
-    "login"
-}
-#[get("/logout")]
-async fn logout() -> impl Responder {
-    "logout"
+// #[get("/login")]
+// async fn login() -> impl Responder {
+//     "login"
+// }
+// #[get("/logout")]
+// async fn logout() -> impl Responder {
+//     "logout"
+// }
+// #[actix_web::main]
+// async fn main() -> std::io::Result<()> {
+//     HttpServer::new(|| {
+//         let scope_users = web::scope("/users").service(login).service(logout);
+//         App::new().service(scope_users)
+//     })
+//     .bind(("127.0.0.1", 8099))?
+//     .run()
+//     .await
+// }
+// End of AppStateWithCounter
+
+// Start of guard
+// use actix_web::{get, guard, web, App, HttpResponse, HttpServer, Responder};
+// async fn manual_hello() -> impl Responder {
+//     HttpResponse::Ok().body("Eiy Kiddos")
+// }
+// #[actix_web::main]
+// async fn main() -> std::io::Result<()> {
+//     HttpServer::new(|| {
+//         App::new().service(
+//             web::scope("/guard")
+//                 .guard(guard::Get())
+//                 .route("/eiy", web::to(|| manual_hello())),
+//         )
+//     })
+//     .bind(("127.0.0.1", 8099))?
+//     .run()
+//     .await
+// }
+// End of guard
+
+// Start of configuration
+use actix_web::{get, guard, web, App, HttpResponse, HttpServer, Responder};
+async fn manual_hello() -> impl Responder {
+    HttpResponse::Ok().body("Eiy Kiddos")
 }
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
-        let scope_users = web::scope("/users").service(login).service(logout);
-        App::new().service(scope_users)
+        App::new().service(
+            web::scope("/guard")
+                .guard(guard::Get())
+                .route("/eiy", web::to(|| manual_hello())),
+        )
     })
     .bind(("127.0.0.1", 8099))?
     .run()
     .await
 }
-// End of AppStateWithCounter
+// End of configuration
