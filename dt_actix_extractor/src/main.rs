@@ -1,4 +1,4 @@
-use actix_web::{get, web, App, HttpRequest, HttpServer, Result};
+use actix_web::{get, post, web, App, HttpRequest, HttpServer, Result};
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -37,6 +37,15 @@ struct InfoQuery {
 async fn index_query(query: web::Query<InfoQuery>) -> Result<String> {
     Ok(format!("Elcome {}", query.username))
 }
+#[derive(Deserialize)]
+struct InfoJson {
+    username: String,
+}
+
+#[post("/json")]
+async fn index_json(json: web::Json<InfoJson>) -> Result<String> {
+    Ok(format!("Elcome {}", json.username))
+}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -46,6 +55,7 @@ async fn main() -> std::io::Result<()> {
             .service(index_two)
             .service(index_three)
             .service(index_query)
+            .service(index_json)
     })
     .bind(("127.0.0.1", 8099))?
     .run()
