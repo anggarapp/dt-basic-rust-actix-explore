@@ -1,4 +1,4 @@
-use actix_web::{error, get, web, App, HttpRequest, HttpResponse, HttpServer, Result};
+use actix_web::{error, get, post, web, App, HttpRequest, HttpResponse, HttpServer, Result};
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -41,10 +41,18 @@ async fn index_query(query: web::Query<InfoQuery>) -> Result<String> {
 struct InfoJson {
     username: String,
 }
-
 // #[post("/json")]
 async fn index_json(json: web::Json<InfoJson>) -> Result<String> {
     Ok(format!("Elcome {}", json.username))
+}
+
+#[derive(Deserialize)]
+struct FormData {
+    username: String,
+}
+#[post("/form")]
+async fn index_form(form: web::Form<FormData>) -> Result<String> {
+    Ok(format!("Elcome {}", form.username))
 }
 
 #[actix_web::main]
@@ -60,6 +68,7 @@ async fn main() -> std::io::Result<()> {
             .service(index_two)
             .service(index_three)
             .service(index_query)
+            .service(index_form)
             .service(
                 web::resource("/submit")
                     .app_data(json_config)
