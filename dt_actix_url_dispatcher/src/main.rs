@@ -174,43 +174,69 @@
 //     .await
 // }
 
-use actix_web::{get, web, HttpRequest, HttpResponse, Responder};
+// use actix_web::{get, web, HttpRequest, HttpResponse, Responder};
 
-#[get("/")]
-async fn index(req: HttpRequest) -> impl Responder {
-    let url = req.url_for("youtube", ["enten"]).unwrap();
+// #[get("/")]
+// async fn index(req: HttpRequest) -> impl Responder {
+//     let url = req.url_for("youtube", ["enten "]).unwrap();
 
-    url.to_string()
-}
+//     url.to_string()
+// }
 
-#[get("/show", name = "show_users")]
-async fn show_users(_req: HttpRequest) -> HttpResponse {
-    HttpResponse::Ok().body("Show users")
-}
+// #[get("/show", name = "show_users")]
+// async fn show_users(_req: HttpRequest) -> HttpResponse {
+//     HttpResponse::Ok().body("Show users")
+// }
 
-async fn generate_url(req: HttpRequest) -> impl Responder {
-    let url = req.url_for("show_users", &[""]);
+// async fn generate_url(req: HttpRequest) -> impl Responder {
+//     let url = req.url_for("show_users", &[""]);
 
-    match url {
-        Ok(url) => HttpResponse::Ok().body(format!("generate URL: {}", url)),
-        Err(_) => HttpResponse::InternalServerError().body("Failed to generate URL"),
-    }
+//     match url {
+//         Ok(url) => HttpResponse::Ok().body(format!("generate URL: {}", url)),
+//         Err(_) => HttpResponse::InternalServerError().body("Failed to generate URL"),
+//     }
+// }
+
+// #[actix_web::main]
+// async fn main() -> std::io::Result<()> {
+//     use actix_web::{App, HttpServer};
+
+//     HttpServer::new(|| {
+//         App::new()
+//             .service(index)
+//             .external_resource("youtube", "https://youtube.com/watch/{video_id}")
+//             .service(web::scope("/users").service(show_users))
+//             .route("/generate", web::get().to(generate_url))
+//     })
+//     .bind(("127.0.0.1", 8080))?
+//     .run()
+//     .await
+// }
+
+// end url generation
+
+// start path normalization
+
+use actix_web::{get, http::Method, middleware, HttpResponse};
+
+#[get("/resource")]
+async fn index() -> HttpResponse {
+    HttpResponse::Ok().body("hello")
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    use actix_web::{App, HttpServer};
+    use actix_web::{web, App, HttpServer};
 
     HttpServer::new(|| {
         App::new()
+            .wrap(middleware::NormalizePath::trim())
             .service(index)
-            .external_resource("youtube", "https://youtube.com/watch/{video_id}")
-            .service(web::scope("/users").service(show_users))
-            .route("/generate", web::get().to(generate_url))
+            .default_service(web::route().method(Method::GET))
     })
     .bind(("127.0.0.1", 8080))?
     .run()
     .await
 }
 
-// end url generation
+// end path normalization
