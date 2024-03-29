@@ -243,20 +243,49 @@
 
 // start custom guard
 
-use actix_web::{
-    guard::{self, Guard, GuardContext},
-    http, HttpResponse,
-};
+// use actix_web::{
+//     guard::{self, Guard, GuardContext},
+//     http, HttpResponse,
+// };
 
-struct ContetTypeHeader;
+// struct ContetTypeHeader;
 
-impl Guard for ContetTypeHeader {
-    fn check(&self, req: &GuardContext<'_>) -> bool {
-        req.head()
-            .headers()
-            .contains_key(http::header::CONTENT_TYPE)
-    }
-}
+// impl Guard for ContetTypeHeader {
+//     fn check(&self, req: &GuardContext<'_>) -> bool {
+//         req.head()
+//             .headers()
+//             .contains_key(http::header::CONTENT_TYPE)
+//     }
+// }
+
+// async fn index() -> HttpResponse {
+//     HttpResponse::Ok().finish()
+// }
+
+// #[actix_web::main]
+// async fn main() -> std::io::Result<()> {
+//     use actix_web::{web, App, HttpServer};
+
+//     HttpServer::new(|| {
+//         App::new()
+//             .route("/", web::route().guard(ContetTypeHeader).to(index))
+//             .route(
+//                 "/notallowed",
+//                 web::route()
+//                     .guard(guard::Not(guard::Get()))
+//                     .to(HttpResponse::MethodNotAllowed),
+//             )
+//     })
+//     .bind(("127.0.0.1", 8080))?
+//     .run()
+//     .await
+// }
+
+// end custom guard
+
+// start override default response
+
+use actix_web::HttpResponse;
 
 async fn index() -> HttpResponse {
     HttpResponse::Ok().finish()
@@ -268,17 +297,12 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(|| {
         App::new()
-            .route("/", web::route().guard(ContetTypeHeader).to(index))
-            .route(
-                "/notallowed",
-                web::route()
-                    .guard(guard::Not(guard::Get()))
-                    .to(HttpResponse::MethodNotAllowed),
-            )
+            .service(web::resource("/").route(web::get().to(index)))
+            .default_service(web::route().to(HttpResponse::MethodNotAllowed))
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(("127.0.0.1", 8099))?
     .run()
     .await
 }
 
-// end custom guard
+// end override default response
