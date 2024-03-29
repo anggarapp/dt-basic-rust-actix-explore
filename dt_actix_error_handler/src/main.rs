@@ -23,45 +23,67 @@
 // }
 // end error handler use default impl
 
-// start error handler use default impl
+// // start error handler use custom impl
 
-use actix_web::{
-    error,
-    http::{header::ContentType, StatusCode},
-    web, App, HttpResponse, HttpServer, Result,
-};
-use derive_more::{Display, Error};
+// use actix_web::{
+//     error,
+//     http::{header::ContentType, StatusCode},
+//     web, App, HttpResponse, HttpServer, Result,
+// };
+// use derive_more::{Display, Error};
 
-#[derive(Debug, Display, Error)]
-enum MyError {
-    #[display(fmt = "Internal error")]
-    InternalError,
+// #[derive(Debug, Display, Error)]
+// enum MyError {
+//     #[display(fmt = "Internal error")]
+//     InternalError,
 
-    #[display(fmt = "Bad Request")]
-    BadClientData,
+//     #[display(fmt = "Bad Request")]
+//     BadClientData,
 
-    #[display(fmt = "Timeout")]
-    Timeout,
+//     #[display(fmt = "Timeout")]
+//     Timeout,
+// }
+
+// impl error::ResponseError for MyError {
+//     fn error_response(&self) -> HttpResponse {
+//         HttpResponse::build(self.status_code())
+//             .insert_header(ContentType::json())
+//             .body(self.to_string())
+//     }
+
+//     fn status_code(&self) -> StatusCode {
+//         match *self {
+//             MyError::InternalError => StatusCode::INTERNAL_SERVER_ERROR,
+//             MyError::BadClientData => StatusCode::BAD_REQUEST,
+//             MyError::Timeout => StatusCode::GATEWAY_TIMEOUT,
+//         }
+//     }
+// }
+
+// async fn index() -> Result<&'static str, MyError> {
+//     Err(MyError::InternalError)
+// }
+
+// #[actix_web::main]
+// async fn main() -> std::io::Result<()> {
+//     HttpServer::new(|| App::new().service(web::resource("/").to(index)))
+//         .bind(("127.0.0.1", 8099))?
+//         .run()
+//         .await
+// }
+
+// // end error handler use custom impl
+
+// start error handler using helper function
+
+use actix_web::{error, web, App, HttpServer, Result};
+struct MyError {
+    name: &'static str,
 }
 
-impl error::ResponseError for MyError {
-    fn error_response(&self) -> HttpResponse {
-        HttpResponse::build(self.status_code())
-            .insert_header(ContentType::json())
-            .body(self.to_string())
-    }
-
-    fn status_code(&self) -> StatusCode {
-        match *self {
-            MyError::InternalError => StatusCode::INTERNAL_SERVER_ERROR,
-            MyError::BadClientData => StatusCode::BAD_REQUEST,
-            MyError::Timeout => StatusCode::GATEWAY_TIMEOUT,
-        }
-    }
-}
-
-async fn index() -> Result<&'static str, MyError> {
-    Err(MyError::InternalError)
+async fn index() -> Result<&'static str> {
+    let result: Result<&'static str, MyError> = Err(MyError { name: "Longinus" });
+    Ok(result.map_err(|e| error::ErrorBadRequest(e.name))?)
 }
 
 #[actix_web::main]
@@ -72,4 +94,4 @@ async fn main() -> std::io::Result<()> {
         .await
 }
 
-// end error handler use default impl
+// end error handler using helper function
