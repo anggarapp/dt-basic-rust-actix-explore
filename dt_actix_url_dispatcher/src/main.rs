@@ -217,11 +217,49 @@
 
 // start path normalization
 
-use actix_web::{get, http::Method, middleware, HttpResponse};
+// use actix_web::{get, http::Method, middleware, HttpResponse};
 
-#[get("/resource")]
+// #[get("/resource")]
+// async fn index() -> HttpResponse {
+//     HttpResponse::Ok().body("hello")
+// }
+
+// #[actix_web::main]
+// async fn main() -> std::io::Result<()> {
+//     use actix_web::{web, App, HttpServer};
+
+//     HttpServer::new(|| {
+//         App::new()
+//             .wrap(middleware::NormalizePath::trim())
+//             .service(index)
+//             .default_service(web::route().method(Method::GET))
+//     })
+//     .bind(("127.0.0.1", 8080))?
+//     .run()
+//     .await
+// }
+
+// end path normalization
+
+// start custom guard
+
+use actix_web::{
+    guard::{self, Guard, GuardContext},
+    http, HttpResponse,
+};
+
+struct ContetTypeHeader;
+
+impl Guard for ContetTypeHeader {
+    fn check(&self, req: &GuardContext<'_>) -> bool {
+        req.head()
+            .headers()
+            .contains_key(http::header::CONTENT_TYPE)
+    }
+}
+
 async fn index() -> HttpResponse {
-    HttpResponse::Ok().body("hello")
+    HttpResponse::Ok().finish()
 }
 
 #[actix_web::main]
@@ -230,13 +268,17 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(|| {
         App::new()
-            .wrap(middleware::NormalizePath::trim())
-            .service(index)
-            .default_service(web::route().method(Method::GET))
+            .route("/", web::route().guard(ContetTypeHeader).to(index))
+            .route(
+                "/notallowed",
+                web::route()
+                    .guard(guard::Not(guard::Get()))
+                    .to(HttpResponse::MethodNotAllowed),
+            )
     })
     .bind(("127.0.0.1", 8080))?
     .run()
     .await
 }
 
-// end path normalization
+// end custom guard
