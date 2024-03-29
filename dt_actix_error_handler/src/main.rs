@@ -96,13 +96,15 @@
 
 // end error handler using helper function
 
-// start error handler with split logic
+// start error handler with split logic with log
 use actix_web::{
     error,
     http::{header::ContentType, StatusCode},
     post, App, HttpResponse, HttpServer, Result,
 };
 use derive_more::{Display, Error};
+use env_logger;
+use log::error;
 use serde;
 
 #[derive(Debug, Display, Error)]
@@ -116,6 +118,9 @@ enum UserError {
 
 impl error::ResponseError for UserError {
     fn error_response(&self) -> HttpResponse {
+        let status_code = self.status_code();
+        let error_message = self.to_string();
+        error!("{} - Status code: - {}", error_message, status_code);
         HttpResponse::build(self.status_code())
             .insert_header(ContentType::html())
             .body(self.to_string())
@@ -150,9 +155,12 @@ async fn proc(data: actix_web::web::Json<MyData>) -> Result<&'static str, UserEr
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    std::env::set_var("RUST_LOG", "info");
+    std::env::set_var("RUST_BACKTRACE", "1");
+    env_logger::init();
     HttpServer::new(|| App::new().service(proc))
         .bind(("127.0.0.1", 8099))?
         .run()
         .await
 }
-// end error handler with split logic
+// end error handler with split logic with log
