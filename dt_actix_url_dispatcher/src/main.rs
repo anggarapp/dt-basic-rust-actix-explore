@@ -91,26 +91,126 @@
 // end scope as prefix and route guard
 
 // start match_info
-use actix_web::{get, App, HttpRequest, HttpServer, Result};
+// use actix_web::{get, App, HttpRequest, HttpServer, Result};
 
-#[get("/version/{v1}/{v2}")]
-async fn index(req: HttpRequest) -> Result<String> {
-    let v1: u8 = req.match_info().get("v1").unwrap().parse().unwrap();
-    let v2: u8 = req.match_info().query("v2").parse().unwrap();
+// #[get("/version/{v1}/{v2}")]
+// async fn index(req: HttpRequest) -> Result<String> {
+//     let v1: u8 = req.match_info().get("v1").unwrap().parse().unwrap();
+//     let v2: u8 = req.match_info().query("v2").parse().unwrap();
 
-    let (v3, v4): (u8, u8) = req.match_info().load().unwrap();
+//     let (v3, v4): (u8, u8) = req.match_info().load().unwrap();
 
-    Ok(format!(
-        "Value v1: {}, v2: {}, v3: {}, v4: {}",
-        v1, v2, v3, v4
-    ))
+//     Ok(format!(
+//         "Value v1: {}, v2: {}, v3: {}, v4: {}",
+//         v1, v2, v3, v4
+//     ))
+// }
+
+// #[actix_web::main]
+// async fn main() -> std::io::Result<()> {
+//     HttpServer::new(|| App::new().service(index))
+//         .bind(("127.0.0.1", 8099))?
+//         .run()
+//         .await
+// }
+// end match_info
+
+// start
+// use actix_web::{get, web, App, HttpServer, Result};
+// use serde::Deserialize;
+
+// #[derive(Deserialize)]
+// struct Info {
+//     username: String,
+// }
+
+// #[get("/{username}/index.html")]
+// async fn index(info: web::Path<Info>) -> Result<String> {
+//     Ok(format!("Welcome {}!", info.username))
+// }
+
+// #[get("/{username}/{id}/index.html")]
+// async fn index2(info: web::Path<(String, u32)>) -> Result<String> {
+//     let info = info.into_inner();
+//     Ok(format!("Welcome {}! id: {}", info.0, info.1))
+// }
+
+// #[actix_web::main]
+// async fn main() -> std::io::Result<()> {
+//     HttpServer::new(|| App::new().service(index).service(index2))
+//         .bind(("127.0.0.1", 8099))?
+//         .run()
+//         .await
+// }
+// end
+
+// start url generation
+// #[get("/test/")]
+// async fn index(req: HttpRequest) -> Result<HttpResponse> {
+//     let url = req.url_for("foo", ["1", "2", "3"])?;
+
+//     Ok(HttpResponse::Found()
+//         .insert_header((header::LOCATION, url.as_str()))
+//         .finish())
+// }
+
+// use actix_web::{get, guard, http::header, HttpRequest, HttpResponse, Result};
+// #[actix_web::main]
+// async fn main() -> std::io::Result<()> {
+//     use actix_web::{web, App, HttpServer};
+
+//     HttpServer::new(|| {
+//         App::new()
+//             .service(
+//                 web::resource("/test/{a}/{b}/{c}")
+//                     .name("foo")
+//                     .guard(guard::Get())
+//                     .to(HttpResponse::Ok),
+//             )
+//             .service(index)
+//     })
+//     .bind(("127.0.0.1", 8080))?
+//     .run()
+//     .await
+// }
+
+use actix_web::{get, web, HttpRequest, HttpResponse, Responder};
+
+#[get("/")]
+async fn index(req: HttpRequest) -> impl Responder {
+    let url = req.url_for("youtube", ["enten"]).unwrap();
+
+    url.to_string()
+}
+
+#[get("/show", name = "show_users")]
+async fn show_users(_req: HttpRequest) -> HttpResponse {
+    HttpResponse::Ok().body("Show users")
+}
+
+async fn generate_url(req: HttpRequest) -> impl Responder {
+    let url = req.url_for("show_users", &[""]);
+
+    match url {
+        Ok(url) => HttpResponse::Ok().body(format!("generate URL: {}", url)),
+        Err(_) => HttpResponse::InternalServerError().body("Failed to generate URL"),
+    }
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| App::new().service(index))
-        .bind(("127.0.0.1", 8099))?
-        .run()
-        .await
+    use actix_web::{App, HttpServer};
+
+    HttpServer::new(|| {
+        App::new()
+            .service(index)
+            .external_resource("youtube", "https://youtube.com/watch/{video_id}")
+            .service(web::scope("/users").service(show_users))
+            .route("/generate", web::get().to(generate_url))
+    })
+    .bind(("127.0.0.1", 8080))?
+    .run()
+    .await
 }
-// end match_info
+
+// end url generation
