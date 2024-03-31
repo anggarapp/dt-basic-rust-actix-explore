@@ -6,3 +6,28 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+actix = "0.13.3"
+actix-web = "4.5.1"
+argon2 = "0.5.3"
+blob-uuid = "0.5.0"
+chrono = {version = "0.4.37", features = ["serde"]}
+config = "0.14.0"
+futures = "0.3.30"
+futures-core = "0.3.30"
+lazy_static = "1.4.0"
+rand = "0.8.5"
+regex = "1.10.4"
+reqwest = "0.12.2"
+serde = {version = "1.0.197", features = ["derive"]}
+serde_json = "1.0.115"
+sluggify = "0.1.0"
+sqlx = {version = "0.7.4", features = ["runtime-tokio-rustls", "macros", "postgres", "uuid", "chrono", "migrate"]}
+thiserror = "1.0.58"
+utoipa = {version = "4.2.0", features = ["actix_extras"]}
+utoipa-swagger-ui = {version = "6.0.0", features = ["actix-web"]}
+uuid = {version = "1.8.0", features = ["v4", "fast-rng", "macro-diagnostics"]}
+validator = {version = "0.17.0", features = ["derive", "validator_derive"]}
+validator_derive = "0.17.0"
+
+[dev-dependencies]
+wiremock = "0.6.0"
