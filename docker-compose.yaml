@@ -1,0 +1,10 @@
+services:
+  actix_db:
+    image: postgres:12
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=${PG_NAME:-dt_actix}
+      - POSTGRES_USER=${PG_USER:-postgres}
+      - POSTGRES_PASSWORD=${PG_PASSWORD:-mehtest}
+      - POSTGRES_HOST_AUTH_METHOD=trust
