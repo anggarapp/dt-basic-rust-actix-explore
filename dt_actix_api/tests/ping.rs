@@ -1,19 +1,28 @@
-use dt_actix_api::server::start;
-use std::net::TcpListener;
+use dt_actix_api::server::{get_connection_pool, Application};
+use dt_actix_api::settings::get_app_mode;
+use sqlx::PgPool;
 
 pub struct MyApp {
     pub address: String,
+    pub db_pool: PgPool,
 }
 
 async fn start_server() -> MyApp {
-    let listener = TcpListener::bind("127.0.0.1:0").expect("Failed to bind random port");
-    let port = listener.local_addr().unwrap().port();
-    let address = format!("http://127.0.0.1:{}", port);
-    let server = start(listener).expect("Failed to bind address");
-    let _ = actix_web::rt::spawn(server);
-    MyApp { address }
-}
+    let configuration = get_app_mode().expect("Failed to read configuration.");
 
+    let app = Application::build_app(configuration.clone())
+        .await
+        .expect("Failed to build application");
+
+    let address = format!("http://127.0.0.1:8099");
+
+    let _ = actix_web::rt::spawn(app.run_app());
+
+    MyApp {
+        address,
+        db_pool: get_connection_pool(&configuration.database),
+    }
+}
 #[actix_web::test]
 async fn test_het_ping() {
     let app = start_server().await;
