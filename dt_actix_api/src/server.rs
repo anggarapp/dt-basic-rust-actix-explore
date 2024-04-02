@@ -1,5 +1,6 @@
-use crate::routes::__path_ping;
 use crate::routes::ping;
+use crate::routes::{__path_delete, __path_login, __path_ping, __path_register, __path_update};
+use crate::routes::{delete, login, register, update}; // User handlers
 
 use actix_web::{dev::Server, web, App, HttpServer};
 use std::net::TcpListener;
@@ -8,6 +9,7 @@ use utoipa_swagger_ui::SwaggerUi;
 
 use sqlx::{postgres::PgPoolOptions, PgPool};
 
+use crate::schemas::{UserDelete, UserLogin, UserRegister, UserUpdate};
 use crate::settings::{DatabaseSettings, Settings};
 
 pub fn get_connection_pool(configuration: &DatabaseSettings) -> PgPool {
@@ -49,7 +51,7 @@ impl Application {
 pub fn start(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Error> {
     #[derive(OpenApi)]
     #[openapi(
-        paths(ping),
+        paths(ping, register, login, update, delete),
         info(
             title = "Actix but CRUD Again",
             version = "0.1.0",
@@ -60,7 +62,8 @@ pub fn start(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::
                 url = "github.com",
                 email = "maidenless@tarnished.com"
             )
-        )
+        ),
+        components(schemas(UserRegister, UserLogin, UserUpdate, UserDelete,),)
     )]
 
     struct ApiDoc;
@@ -74,6 +77,14 @@ pub fn start(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::
             )
             .app_data(db_pool_data.clone())
             .route("/ping", web::get().to(ping))
+            .service(
+                web::scope("/api/v1")
+                    // User routes ---------------------------------------------------------------
+                    .service(web::resource("users/register").route(web::post().to(register)))
+                    .service(web::resource("users/login").route(web::post().to(login)))
+                    .service(web::resource("users/update").route(web::put().to(update)))
+                    .service(web::resource("users/delete").route(web::delete().to(delete))),
+            )
     })
     .listen(listener)?
     .run();
